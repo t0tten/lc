@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#-------------------------------#
+#	LC - v1.2		#
+#	Rasmus Schenstroem	#
+#		2018.10.12	#
+#-------------------------------#
+
+
+REC_MODE=false
+FOLDER=
+
+function help {
+	printf "Usage: ./lc (<option>) (<path>)\n\n"
+	printf "OPTIONS:\n"
+	printf "\t-r \t- Recusive\n"
+	printf "\t-h \t- Help\n"
+}
+
+function search {
+	TTL=0
+	CONTENT=(`ls $1`)
+
+	for i in ${CONTENT[*]}; do
+		if [ -d "$1/$i" ]; then
+			if [[ $REC_MODE = true ]]; then
+				((TTL+=$(search "$1/$i")))
+			fi
+		elif [[ "$(file $1/$i | grep -o ASCII)" =~ 'ASCII'$ ]]; then
+			((TTL+=$(cat "$1/$i" | wc -l)))
+		fi
+	done
+
+	echo $TTL
+}
+
+while [[ "$#" > 0 ]]; do
+	case $1 in 
+		-r|--recursive) 
+			FOLDER="$2"
+			REC_MODE=true
+			;;
+		-h|--help)
+			help
+			exit
+			;;
+		*)
+			FOLDER="$1"
+			;;
+
+	esac
+	shift
+done
+
+if [ -z "$FOLDER" ]; then
+	FOLDER="."
+fi
+
+if [ -d "$FOLDER" ]; then
+	echo "$(search $FOLDER)"
+else
+	help
+fi
